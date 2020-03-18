@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Compiled and minified Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>COVID-19 Tracker</title>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-wrapper">
+            <a href="#" class="brand-logo center">COVID-19 Tracker</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="section">
+            <div class="row">
+                <div class="input-field col s10 m10 l10 xl8 offset-s1 offset-m1 offset-l1 offset-xl2">
+                    <input id="search-contry" type="text">
+                    <label for="search-country">Search Your Country</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col s10 m10 l6 xl6 offset-s1 offset-m1">
+                    <ul class="collection with-header">
+                        <li class="collection-header">
+                            <h5 class="center">Summary</h5>
+                        </li>
+                        <li class="collection-item" id="confirmed-cases">Total confirmed cases <span
+                                class="badge orange white-text">200000</span> </li>
+                        <li class="collection-item" id="confirmed-today">Total confirmed cases today <span
+                                class="badge orange white-text">1000</span></li>
+                        <li class="collection-item" id="confirmed-recovered">Total confirmed recovered patients <span
+                                class="badge green white-text">75000</span></li>
+                        <li class="collection-item" id="confirmed-deaths">Total confirmed deaths <span
+                                class="badge red white-text">8000</span></li>
+                        <li class="collection-item" id="confirmed-deaths-today">Total confirmed deaths today <span
+                                class="badge red white-text">500</span></li>
+                    </ul>
+                </div>
+                <div class="col s10 m10 l6 xl6 offset-s1 offset-m1">
+                    <ul class="collection with-header">
+                        <li class="collection-header">
+                            <h5 class="center">Countries with most infections</h5>
+                        </li>
+                        <li class="collection-item" id="most-1">China <span class="badge red white-text">200000</span>
+                        </li>
+                        <li class="collection-item" id="most-2">Italy<span class="badge red white-text">1000</span>
+                        </li>
+                        <li class="collection-item" id="most-3">Iran <span class="badge red white-text">75000</span>
+                        </li>
+                        <li class="collection-item" id="most-4">Spain <span class="badge red white-text">8000</span>
+                        </li>
+                        <li class="collection-item" id="most-5">Germany <span class="badge red white-text">500</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row">
+                <h4 class="">All Countries</h4>
+
+                <table class="highlight">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th>Infected</th>
+                            <th>Deaths</th>
+                            <th>Recovered</th>
+                        </tr>
+                    </thead>
+                    <tr>
+
+                        <td>1</td>
+                        <td>China</td>
+                        <td>80,000</td>
+                        <td>4,000</td>
+                        <td>56,000</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Italy</td>
+                        <td>30,000</td>
+                        <td>2,500</td>
+                        <td>2,500</td>
+                    </tr>
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+
+
+    <!-- Compiled and minified Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <!-- Axios JS -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
