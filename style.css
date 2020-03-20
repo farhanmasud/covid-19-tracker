@@ -1,0 +1,43 @@
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+#loading {
+    top: 25vh;
+}
+
+h1 {
+    /* font-weight: 300; */
+    font-size: 2.8rem;
+}
+
+h4,
+h5 {
+    font-weight: 350;
+}
+
+.page-footer {
+    margin: 0;
+    padding: 0;
+}
+
+footer a,
+a:visited {
+    color: #e51c23;
+}
+
+tr[data-slug] {
+    cursor: pointer;
+}
+
+@media (orientation: portrait) {
+    .modal {
+        width: 95%;
+    }
+}
