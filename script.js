@@ -154,8 +154,12 @@ searchFilter = () => {
     input.addEventListener("input", () => {
         if (input.value === "") {
             document.querySelector("#summary-box").style.display = "block";
+            document.querySelector("#table-header").innerText =
+                "All Infected Countries";
         } else {
             document.querySelector("#summary-box").style.display = "none";
+            document.querySelector("#table-header").innerText =
+                "Search results";
         }
 
         filter = input.value.toLowerCase();
