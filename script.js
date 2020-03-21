@@ -9,7 +9,7 @@ const DOMElements = {
     recoveredPatients: "#recovered-patients",
     deaths: "#all-deaths",
     newDeaths: "#new-deaths-today",
-    searchInput: "#search-contry"
+    searchInput: "#search-country"
 };
 
 axios
@@ -152,6 +152,12 @@ searchFilter = () => {
     input = document.querySelector(DOMElements.searchInput);
 
     input.addEventListener("input", () => {
+        if (input.value === "") {
+            document.querySelector("#summary-box").style.display = "block";
+        } else {
+            document.querySelector("#summary-box").style.display = "none";
+        }
+
         filter = input.value.toLowerCase();
         table = document.querySelector(DOMElements.countryListTable);
         tr = table.querySelectorAll("tr");
