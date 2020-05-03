@@ -288,7 +288,8 @@ openModal = (countryData, slug) => {
             }
 
             let chartData;
-            chartData = processCountryData(res.data);
+            chartData = processChartData(res.data, "Infected");
+            let startingPoint = detectZero(res.data);
 
             let ctx = document.getElementById("country-chart");
             let chart = createChartAndShowInfected(
@@ -302,7 +303,7 @@ openModal = (countryData, slug) => {
                     `https://api.covid19api.com/total/country/${slug}/status/deaths`
                 )
                 .then((res) => {
-                    chartData = processCountryData(res.data);
+                    chartData = processChartData(res.data, "", startingPoint);
                     chart = updateChart(chart, chartData, "Deaths", "#e51c23");
 
                     axios
@@ -310,7 +311,11 @@ openModal = (countryData, slug) => {
                             `https://api.covid19api.com/total/country/${slug}/status/recovered`
                         )
                         .then((res) => {
-                            chartData = processCountryData(res.data);
+                            chartData = processChartData(
+                                res.data,
+                                "",
+                                startingPoint
+                            );
                             chart = updateChart(
                                 chart,
                                 chartData,
@@ -327,17 +332,43 @@ openModal = (countryData, slug) => {
     instance.open();
 };
 
-processCountryData = (countryData) => {
+detectZero = (chartData) => {
+    let startingPoint = 0;
+    let found = false;
+
+    chartData.forEach((row, index, values) => {
+        if (index > 0) {
+            if (row.Cases !== 0 && values[index - 1].Cases === 0) {
+                if (found === false) {
+                    startingPoint = index;
+                }
+            }
+        }
+    });
+
+    return startingPoint;
+};
+
+processChartData = (chartData, caseType = "", startingPoint = 0) => {
     let dataLabelPoints, dataLabels, processedData;
     dataLabelPoints = [];
     dataLabels = [];
 
     processedData = [];
 
-    countryData.forEach((row) => {
-        processedData.push(row.Cases);
-        dataLabels.push(row.Date.slice(0, 10));
-    });
+    if (startingPoint === 0) {
+        chartData.forEach((row) => {
+            if (row.Cases !== 0 && caseType === "Infected") {
+                processedData.push(row.Cases);
+                dataLabels.push(row.Date.slice(0, 10));
+            }
+        });
+    } else {
+        for (let i = startingPoint; i < chartData.length; i++) {
+            processedData.push(chartData[i].Cases);
+            dataLabels.push(chartData[i].Date.slice(0, 10));
+        }
+    }
 
     return {
         dataPoints: processedData,
