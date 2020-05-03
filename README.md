@@ -1,4 +1,4 @@
-# COVID-19 tracker
+# COVID-19 Tracker
 
 A simple tracker for COVID-19 based on [covid19api](https://covid19api.com/)
 

@@ -1,6 +1,4 @@
 console.log("Initiating");
-document.querySelector("#search-and-summary").style.display = "none";
-document.querySelector("#infected-country-list").style.display = "none";
 
 const DOMElements = {
     countryListTable: "#country-list-table",
@@ -10,7 +8,28 @@ const DOMElements = {
     deaths: "#all-deaths",
     newDeaths: "#new-deaths-today",
     searchInput: "#search-country",
+    searchAndSummary: "#search-and-summary",
+    loading1: "#loading",
+    loading2: "#loading-2",
+    loading3: "#loading-3",
+    infectedCountryList: "#infected-country-list",
+    summaryBox: "#summary-box",
+    tableHeader: "#table-header",
+    modal: ".modal",
+    modalCountryName: "#modal-country-name",
+    modalRecoveredPatients: "#modal-recovered-patients",
+    modalAllDeathsToday: "#modal-all-deaths-today",
+    modalAllDeaths: "#modal-all-deaths",
+    modalConfirmedToday: "#modal-confirmed-today",
+    modalConfirmedCases: "#modal-cofirmed-cases",
+    modalCountryChartId: "country-chart",
+    modalCountryChartDiv: "#chart",
+    modalCountryChartDailyId: "country-chart-daily",
+    modalCountryChartDailyDiv: "#chart-daily",
 };
+
+document.querySelector(DOMElements.searchAndSummary).style.display = "none";
+document.querySelector(DOMElements.infectedCountryList).style.display = "none";
 
 axios
     .get("https://api.covid19api.com/summary")
@@ -19,9 +38,10 @@ axios
 
 resProcess = (res) => {
     console.log(res.status);
-    document.querySelector("#search-and-summary").style.display = "block";
-    document.querySelector("#loading").style.display = "none";
-    document.querySelector("#loading-2").style.display = "block";
+    document.querySelector(DOMElements.searchAndSummary).style.display =
+        "block";
+    document.querySelector(DOMElements.loading1).style.display = "none";
+    document.querySelector(DOMElements.loading2).style.display = "block";
 
     let data = res.data.Countries;
     let dataToSort = [...data];
@@ -37,9 +57,10 @@ resProcess = (res) => {
             let processedSlugData = processSlugData(res.data);
             displayCountryStats(data, processedSlugData);
 
-            document.querySelector("#loading-2").style.display = "none";
-            document.querySelector("#infected-country-list").style.display =
-                "block";
+            document.querySelector(DOMElements.loading2).style.display = "none";
+            document.querySelector(
+                DOMElements.infectedCountryList
+            ).style.display = "block";
 
             addEventListenerOnRows(processedInput);
             searchFilter();
@@ -203,12 +224,14 @@ searchFilter = () => {
 
     input.addEventListener("input", () => {
         if (input.value === "") {
-            document.querySelector("#summary-box").style.display = "block";
-            document.querySelector("#table-header").innerText =
+            document.querySelector(DOMElements.summaryBox).style.display =
+                "block";
+            document.querySelector(DOMElements.tableHeader).innerText =
                 "All Infected Countries";
         } else {
-            document.querySelector("#summary-box").style.display = "none";
-            document.querySelector("#table-header").innerText =
+            document.querySelector(DOMElements.summaryBox).style.display =
+                "none";
+            document.querySelector(DOMElements.tableHeader).innerText =
                 "Search results";
         }
 
@@ -243,7 +266,7 @@ addEventListenerOnRows = (processedInput) => {
 };
 
 openModal = (countryData, slug) => {
-    let elem = document.querySelector(".modal");
+    let elem = document.querySelector(DOMElements.modal);
     let instance = M.Modal.init(elem);
 
     countryData = addCommas(countryData, [
@@ -254,50 +277,49 @@ openModal = (countryData, slug) => {
         "TotalRecovered",
     ]);
 
-    document.querySelector("#modal-country-name").innerText =
+    document.querySelector(DOMElements.modalCountryName).innerText =
         countryData.Country;
-    document.querySelector("#modal-cofirmed-cases").innerText =
+    document.querySelector(DOMElements.modalConfirmedCases).innerText =
         countryData.TotalConfirmed;
-    document.querySelector("#modal-confirmed-today").innerText =
+    document.querySelector(DOMElements.modalConfirmedToday).innerText =
         countryData.NewConfirmed;
-    document.querySelector("#modal-all-deaths").innerText =
+    document.querySelector(DOMElements.modalAllDeaths).innerText =
         countryData.TotalDeaths;
-    document.querySelector("#modal-all-deaths-today").innerText =
+    document.querySelector(DOMElements.modalAllDeathsToday).innerText =
         countryData.NewDeaths;
-    document.querySelector("#modal-recovered-patients").innerText =
+    document.querySelector(DOMElements.modalRecoveredPatients).innerText =
         countryData.TotalRecovered;
 
-    document.querySelector("#loading-3").style.display = "block";
+    document.querySelector(DOMElements.loading3).style.display = "block";
 
     axios
         .get(
             `https://api.covid19api.com/total/country/${slug}/status/confirmed`
         )
         .then((res) => {
-            document.querySelector("#loading-3").style.display = "none";
+            document.querySelector(DOMElements.loading3).style.display = "none";
 
             let chartData;
             chartData = processChartData(res.data, "Infected");
             let startingPoint = detectZero(res.data);
 
             let infectedChartData = processDailyInfectedChartData(chartData);
-            // console.log(infectedChartData);
 
-            let chartDailyID = "country-chart-daily";
-
-            let chartDailyElement = document.getElementById(chartDailyID);
+            let chartDailyElement = document.getElementById(
+                DOMElements.modalCountryChartDailyId
+            );
             chartDailyElement.parentNode.removeChild(chartDailyElement);
 
             document.querySelector(
-                "#chart-daily"
-            ).innerHTML += `<canvas id="${chartDailyID}" width="300" height="300"></canvas>`;
+                DOMElements.modalCountryChartDiv
+            ).innerHTML += `<canvas id="${DOMElements.modalCountryChartDailyId}" width="300" height="300"></canvas>`;
             if (window.innerHeight < window.innerWidth) {
                 document
-                    .getElementById(chartDailyID)
+                    .getElementById(DOMElements.modalCountryChartDailyId)
                     .setAttribute("height", 150);
             }
             let ctxDaily = document
-                .getElementById(chartDailyID)
+                .getElementById(DOMElements.modalCountryChartDailyId)
                 .getContext("2d");
 
             let chartDaily = createChartAndShowDaily(
@@ -306,23 +328,23 @@ openModal = (countryData, slug) => {
                 countryData.Country
             );
 
-            // createDailyBarChart(ctxDaily, infectedChartData);
-
-            let chartID = "country-chart";
-
-            let chartElement = document.getElementById(chartID);
+            let chartElement = document.getElementById(
+                DOMElements.modalCountryChartId
+            );
             chartElement.parentNode.removeChild(chartElement);
 
             document.querySelector(
-                "#chart"
-            ).innerHTML += `<canvas id="${chartID}" width="300" height="300"></canvas>`;
+                DOMElements.modalCountryChartDailyDiv
+            ).innerHTML += `<canvas id="${DOMElements.modalCountryChartId}" width="300" height="300"></canvas>`;
             if (window.innerHeight < window.innerWidth) {
-                document.getElementById(chartID).setAttribute("height", 150);
+                document
+                    .getElementById(DOMElements.modalCountryChartId)
+                    .setAttribute("height", 150);
             }
 
-            let ctx = document.getElementById(chartID).getContext("2d");
-
-            console.log(chartData);
+            let ctx = document
+                .getElementById(DOMElements.modalCountryChartId)
+                .getContext("2d");
 
             let chart = createChartAndShowInfected(
                 ctx,
@@ -409,8 +431,6 @@ processChartData = (chartData, caseType = "", startingPoint = 0) => {
 };
 
 processDailyInfectedChartData = (data) => {
-    console.log("data");
-    console.log(data);
     let retData = {
         dataLabels: [],
         dataPoints: [],
@@ -418,14 +438,16 @@ processDailyInfectedChartData = (data) => {
 
     retData.dataLabels.push(data.dataLabels[0]);
     retData.dataPoints.push(data.dataPoints[0]);
-
+    let newCase = 0;
     for (let i = 1; i < data.dataLabels.length; i++) {
-        // console.log(data.dataLabels[i]);
+        newCase = data.dataPoints[i] - data.dataPoints[i - 1];
         retData.dataLabels.push(data.dataLabels[i]);
-        retData.dataPoints.push(data.dataPoints[i] - data.dataPoints[i - 1]);
+        if (newCase < 0) {
+            retData.dataPoints.push(0);
+        } else {
+            retData.dataPoints.push(newCase);
+        }
     }
-
-    console.log(retData);
 
     return retData;
 };
