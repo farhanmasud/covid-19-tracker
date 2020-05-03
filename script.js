@@ -9,15 +9,15 @@ const DOMElements = {
     recoveredPatients: "#recovered-patients",
     deaths: "#all-deaths",
     newDeaths: "#new-deaths-today",
-    searchInput: "#search-country"
+    searchInput: "#search-country",
 };
 
 axios
     .get("https://api.covid19api.com/summary")
-    .then(res => resProcess(res))
-    .catch(err => console.log(err));
+    .then((res) => resProcess(res))
+    .catch((err) => console.log(err));
 
-resProcess = res => {
+resProcess = (res) => {
     console.log(res.status);
     document.querySelector("#search-and-summary").style.display = "block";
     document.querySelector("#loading").style.display = "none";
@@ -26,26 +26,39 @@ resProcess = res => {
     let data = res.data.Countries;
     let dataToSort = [...data];
 
+    // console.log(data);
+
     let processedInput = processInputData(data);
 
     let summaryData = calculateSummary(data);
     displaySummary(summaryData);
     displayTopFive(dataToSort);
 
+    // let processedData = addCommas(data, [
+    //     "TotalConfirmed",
+    //     "NewConfirmed",
+    //     "TotalDeaths",
+    //     "NewDeaths",
+    //     "TotalRecovered",
+    // ]);
+
     axios
         .get("https://api.covid19api.com/countries")
-        .then(res => {
+        .then((res) => {
             // console.log(res);
+
+            let processedSlugData = processSlugData(res.data);
+            // displayCountryStats(processedData, processedSlugData);
+            displayCountryStats(data, processedSlugData);
+
             document.querySelector("#loading-2").style.display = "none";
             document.querySelector("#infected-country-list").style.display =
                 "block";
-            let processedSlugData = processSlugData(res.data);
-            displayCountryStats(data, processedSlugData);
 
             addEventListenerOnRows(processedInput);
             searchFilter();
         })
-        .catch(err => console.log(err));
+        .catch((err) => console.log(err));
 };
 
 sortCompareFunc = (a, b) => {
@@ -58,7 +71,57 @@ sortCompareFunc = (a, b) => {
     return 0;
 };
 
-calculateSummary = data => {
+addCommas = (data, keys = []) => {
+    console.log("Here");
+    var allKeys = Object.keys(data);
+    if (keys.length === 0) {
+        keys = allKeys;
+    }
+    var retData = [];
+    allKeys.forEach((key) => {
+        if (keys.includes(key)) {
+            var tempNum = data[key].toString().trim();
+            var keyLen = tempNum.length;
+            if (keyLen > 3) {
+                numCommas = Math.ceil(keyLen / 3) - 1;
+                // console.log(numCommas);
+                var commaPos = [];
+                var remainder = keyLen % 3;
+                var commaCount = 0;
+
+                if (remainder !== 0) {
+                    var pos = remainder;
+                } else {
+                    pos = 3;
+                }
+
+                commaPos.push(pos);
+                commaCount++;
+
+                while (commaCount < numCommas) {
+                    pos = pos + 4;
+                    commaCount++;
+                    commaPos.push(pos);
+                }
+
+                commaPos.forEach((pos) => {
+                    tempNum =
+                        tempNum.substring(0, pos) +
+                        "," +
+                        tempNum.substring(pos);
+                });
+            }
+
+            retData[key] = tempNum;
+        } else {
+            retData[key] = data[key];
+        }
+    });
+
+    return retData;
+};
+
+calculateSummary = (data) => {
     let totalCases, newCases, recoveredPatients, deaths, newDeaths;
 
     [totalCases, newCases, recoveredPatients, deaths, newDeaths] = [
@@ -66,10 +129,10 @@ calculateSummary = data => {
         0,
         0,
         0,
-        0
+        0,
     ];
 
-    data.forEach(value => {
+    data.forEach((value) => {
         totalCases += value.TotalConfirmed;
         newCases += value.NewConfirmed;
         recoveredPatients += value.TotalRecovered;
@@ -82,11 +145,12 @@ calculateSummary = data => {
         newCases: newCases,
         recoveredPatients: recoveredPatients,
         deaths: deaths,
-        newDeaths: newDeaths
+        newDeaths: newDeaths,
     };
 };
 
-displaySummary = summaryData => {
+displaySummary = (summaryData) => {
+    summaryData = addCommas(summaryData);
     document.querySelector(DOMElements.totalCases).innerText =
         summaryData.totalCases;
     document.querySelector(DOMElements.newCases).innerText =
@@ -98,33 +162,30 @@ displaySummary = summaryData => {
         summaryData.newDeaths;
 };
 
-displayTopFive = data => {
-    data = data
-        .sort(sortCompareFunc)
-        .reverse()
-        .slice(0, 5);
-
+displayTopFive = (data) => {
+    data = data.sort(sortCompareFunc).reverse().slice(0, 5);
     data.forEach((value, index) => {
+        var showVal = addCommas(value, ["TotalConfirmed"]);
         document.querySelector(
             `#most-${index + 1}`
-        ).innerHTML = `${value.Country}<span class="badge orange white-text">${value.TotalConfirmed}</span>`;
+        ).innerHTML = `${showVal.Country}<span class="badge orange white-text">${showVal.TotalConfirmed}</span>`;
     });
 };
 
-processInputData = inputData => {
+processInputData = (inputData) => {
     let processedInputData = {};
 
-    inputData.forEach(row => {
+    inputData.forEach((row) => {
         processedInputData[row.Country] = row;
     });
 
     return processedInputData;
 };
 
-processSlugData = slugData => {
+processSlugData = (slugData) => {
     let processedData = {};
 
-    slugData.forEach(value => {
+    slugData.forEach((value) => {
         processedData[value.Country] = value.Slug;
     });
 
@@ -137,12 +198,17 @@ displayCountryStats = (data, slugData) => {
     let countryList = document.querySelector(DOMElements.countryListTable);
 
     data.forEach((value, index) => {
-        countryList.innerHTML += `<tr data-slug="${slugData[value.Country]}">
+        var showVal = addCommas(value, [
+            "TotalConfirmed",
+            "TotalDeaths",
+            "TotalRecovered",
+        ]);
+        countryList.innerHTML += `<tr data-slug="${slugData[showVal.Country]}">
         <td>${index + 1}</td>
-        <td>${value.Country}</td>
-        <td>${value.TotalConfirmed}</td>
-        <td>${value.TotalDeaths}</td>
-        <td>${value.TotalRecovered}</td>
+        <td>${showVal.Country}</td>
+        <td>${showVal.TotalConfirmed}</td>
+        <td>${showVal.TotalDeaths}</td>
+        <td>${showVal.TotalRecovered}</td>
     </tr>`;
     });
 };
@@ -179,10 +245,10 @@ searchFilter = () => {
     });
 };
 
-addEventListenerOnRows = processedInput => {
+addEventListenerOnRows = (processedInput) => {
     const rows = document.querySelectorAll("tr[data-slug]");
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
         row.addEventListener("click", () => {
             // steps to execute
             // console.log(`Row clicked ${row.getAttribute("data-slug")}`);
@@ -219,7 +285,7 @@ openModal = (countryData, slug) => {
         .get(
             `https://api.covid19api.com/total/country/${slug}/status/confirmed`
         )
-        .then(res => {
+        .then((res) => {
             // console.log(res);
             document.querySelector("#loading-3").style.display = "none";
             let chartElement = document.querySelector("#country-chart");
@@ -255,31 +321,44 @@ openModal = (countryData, slug) => {
                             data: chartData.dataPoints,
                             label: "Infected",
                             borderColor: "#ff9800",
-                            fill: false
-                        }
-                    ]
+                            fill: false,
+                        },
+                    ],
                 },
                 options: {
                     title: {
                         display: true,
                         text: `COVID-19 contamination over time in ${countryData.Country}`,
-                        position: "bottom"
-                    }
-                }
+                        position: "bottom",
+                    },
+                    scales: {
+                        yAxes: [
+                            {
+                                ticks: {
+                                    beginAtZero: true,
+                                    userCallback: function (value) {
+                                        value = addCommas({ data: value });
+                                        return value.data;
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                },
             });
 
             axios
                 .get(
                     `https://api.covid19api.com/total/country/${slug}/status/deaths`
                 )
-                .then(res => {
+                .then((res) => {
                     chartData = processCountryData(res.data);
                     // console.log(chart.data.datasets);
                     let newLine = {
                         data: chartData.dataPoints,
                         label: "Deaths",
                         borderColor: "#e51c23",
-                        fill: false
+                        fill: false,
                     };
                     chart.data.datasets.push(newLine);
                     chart.update();
@@ -288,40 +367,40 @@ openModal = (countryData, slug) => {
                         .get(
                             `https://api.covid19api.com/total/country/${slug}/status/recovered`
                         )
-                        .then(res => {
+                        .then((res) => {
                             chartData = processCountryData(res.data);
                             let newerLine = {
                                 data: chartData.dataPoints,
                                 label: "Recovered",
                                 borderColor: "#4caf50",
-                                fill: false
+                                fill: false,
                             };
                             chart.data.datasets.push(newerLine);
                             chart.update();
                         })
-                        .catch(err_3 => console.log(err_3));
+                        .catch((err_3) => console.log(err_3));
                 })
-                .catch(err_2 => console.log(err_2));
+                .catch((err_2) => console.log(err_2));
         })
-        .catch(err_1 => console.log(err_1));
+        .catch((err_1) => console.log(err_1));
 
     instance.open();
 };
 
-processCountryData = countryData => {
+processCountryData = (countryData) => {
     let dataLabelPoints, dataLabels, processedData;
     dataLabelPoints = [];
     dataLabels = [];
 
     processedData = [];
 
-    countryData.forEach(row => {
+    countryData.forEach((row) => {
         processedData.push(row.Cases);
         dataLabels.push(row.Date.slice(0, 10));
     });
 
     return {
         dataPoints: processedData,
-        dataLabels: dataLabels
+        dataLabels: dataLabels,
     };
 };

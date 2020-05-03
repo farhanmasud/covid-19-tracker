@@ -36,6 +36,10 @@ tr[data-slug] {
     cursor: pointer;
 }
 
+.modal {
+    max-height: 90%;
+}
+
 @media (orientation: portrait) {
     .modal {
         width: 95%;
