@@ -275,23 +275,55 @@ openModal = (countryData, slug) => {
         )
         .then((res) => {
             document.querySelector("#loading-3").style.display = "none";
-            let chartElement = document.querySelector("#country-chart");
-            chartElement.parentNode.removeChild(chartElement);
-
-            document.querySelector(
-                "#chart"
-            ).innerHTML += `<canvas id="country-chart" width="300" height="300"></canvas>`;
-            if (window.innerHeight < window.innerWidth) {
-                document
-                    .querySelector("#country-chart")
-                    .setAttribute("height", 150);
-            }
 
             let chartData;
             chartData = processChartData(res.data, "Infected");
             let startingPoint = detectZero(res.data);
 
-            let ctx = document.getElementById("country-chart");
+            let infectedChartData = processDailyInfectedChartData(chartData);
+            // console.log(infectedChartData);
+
+            let chartDailyID = "country-chart-daily";
+
+            let chartDailyElement = document.getElementById(chartDailyID);
+            chartDailyElement.parentNode.removeChild(chartDailyElement);
+
+            document.querySelector(
+                "#chart-daily"
+            ).innerHTML += `<canvas id="${chartDailyID}" width="300" height="300"></canvas>`;
+            if (window.innerHeight < window.innerWidth) {
+                document
+                    .getElementById(chartDailyID)
+                    .setAttribute("height", 150);
+            }
+            let ctxDaily = document
+                .getElementById(chartDailyID)
+                .getContext("2d");
+
+            let chartDaily = createChartAndShowDaily(
+                ctxDaily,
+                infectedChartData,
+                countryData.Country
+            );
+
+            // createDailyBarChart(ctxDaily, infectedChartData);
+
+            let chartID = "country-chart";
+
+            let chartElement = document.getElementById(chartID);
+            chartElement.parentNode.removeChild(chartElement);
+
+            document.querySelector(
+                "#chart"
+            ).innerHTML += `<canvas id="${chartID}" width="300" height="300"></canvas>`;
+            if (window.innerHeight < window.innerWidth) {
+                document.getElementById(chartID).setAttribute("height", 150);
+            }
+
+            let ctx = document.getElementById(chartID).getContext("2d");
+
+            console.log(chartData);
+
             let chart = createChartAndShowInfected(
                 ctx,
                 chartData,
@@ -376,6 +408,28 @@ processChartData = (chartData, caseType = "", startingPoint = 0) => {
     };
 };
 
+processDailyInfectedChartData = (data) => {
+    console.log("data");
+    console.log(data);
+    let retData = {
+        dataLabels: [],
+        dataPoints: [],
+    };
+
+    retData.dataLabels.push(data.dataLabels[0]);
+    retData.dataPoints.push(data.dataPoints[0]);
+
+    for (let i = 1; i < data.dataLabels.length; i++) {
+        // console.log(data.dataLabels[i]);
+        retData.dataLabels.push(data.dataLabels[i]);
+        retData.dataPoints.push(data.dataPoints[i] - data.dataPoints[i - 1]);
+    }
+
+    console.log(retData);
+
+    return retData;
+};
+
 createChartAndShowInfected = (ctx, chartData, countryName) => {
     let chart = new Chart(ctx, {
         type: "line",
@@ -386,7 +440,7 @@ createChartAndShowInfected = (ctx, chartData, countryName) => {
                     data: chartData.dataPoints,
                     label: "Infected",
                     borderColor: "#ff9800",
-                    fill: false,
+                    fill: true,
                 },
             ],
         },
@@ -394,6 +448,47 @@ createChartAndShowInfected = (ctx, chartData, countryName) => {
             title: {
                 display: true,
                 text: `COVID-19 contamination over time in ${countryName}`,
+                position: "bottom",
+            },
+            scales: {
+                yAxes: [
+                    {
+                        ticks: {
+                            beginAtZero: true,
+                            userCallback: function (value) {
+                                value = addCommas({ data: value });
+                                return value.data;
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+    });
+
+    return chart;
+};
+
+createChartAndShowDaily = (ctx, chartData, countryName) => {
+    let chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: chartData.dataLabels,
+            datasets: [
+                {
+                    data: chartData.dataPoints,
+                    label: "Daily New Cases",
+                    // borderColor: "#ff9800",
+                    backgroundColor: "#ff9800",
+                    hoverBackgroundColor: "#e51c23",
+                    fill: true,
+                },
+            ],
+        },
+        options: {
+            title: {
+                display: true,
+                text: `Daily new COVID-19 cases in ${countryName}`,
                 position: "bottom",
             },
             scales: {
