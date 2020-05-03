@@ -25,30 +25,16 @@ resProcess = (res) => {
 
     let data = res.data.Countries;
     let dataToSort = [...data];
-
-    // console.log(data);
-
     let processedInput = processInputData(data);
-
     let summaryData = calculateSummary(data);
+
     displaySummary(summaryData);
     displayTopFive(dataToSort);
-
-    // let processedData = addCommas(data, [
-    //     "TotalConfirmed",
-    //     "NewConfirmed",
-    //     "TotalDeaths",
-    //     "NewDeaths",
-    //     "TotalRecovered",
-    // ]);
 
     axios
         .get("https://api.covid19api.com/countries")
         .then((res) => {
-            // console.log(res);
-
             let processedSlugData = processSlugData(res.data);
-            // displayCountryStats(processedData, processedSlugData);
             displayCountryStats(data, processedSlugData);
 
             document.querySelector("#loading-2").style.display = "none";
@@ -72,7 +58,6 @@ sortCompareFunc = (a, b) => {
 };
 
 addCommas = (data, keys = []) => {
-    console.log("Here");
     var allKeys = Object.keys(data);
     if (keys.length === 0) {
         keys = allKeys;
@@ -84,7 +69,6 @@ addCommas = (data, keys = []) => {
             var keyLen = tempNum.length;
             if (keyLen > 3) {
                 numCommas = Math.ceil(keyLen / 3) - 1;
-                // console.log(numCommas);
                 var commaPos = [];
                 var remainder = keyLen % 3;
                 var commaCount = 0;
@@ -250,12 +234,9 @@ addEventListenerOnRows = (processedInput) => {
 
     rows.forEach((row) => {
         row.addEventListener("click", () => {
-            // steps to execute
-            // console.log(`Row clicked ${row.getAttribute("data-slug")}`);
             let countryName = row.querySelectorAll("td")[1].innerText;
-            // console.log(countryName);
             let countryData = processedInput[countryName];
-            // console.log(countryData);
+
             openModal(countryData, row.getAttribute("data-slug"));
         });
     });
@@ -264,6 +245,14 @@ addEventListenerOnRows = (processedInput) => {
 openModal = (countryData, slug) => {
     let elem = document.querySelector(".modal");
     let instance = M.Modal.init(elem);
+
+    countryData = addCommas(countryData, [
+        "TotalConfirmed",
+        "NewConfirmed",
+        "TotalDeaths",
+        "NewDeaths",
+        "TotalRecovered",
+    ]);
 
     document.querySelector("#modal-country-name").innerText =
         countryData.Country;
@@ -278,7 +267,6 @@ openModal = (countryData, slug) => {
     document.querySelector("#modal-recovered-patients").innerText =
         countryData.TotalRecovered;
 
-    // document.querySelector("#chart").style.display = "none";
     document.querySelector("#loading-3").style.display = "block";
 
     axios
@@ -286,7 +274,6 @@ openModal = (countryData, slug) => {
             `https://api.covid19api.com/total/country/${slug}/status/confirmed`
         )
         .then((res) => {
-            // console.log(res);
             document.querySelector("#loading-3").style.display = "none";
             let chartElement = document.querySelector("#country-chart");
             chartElement.parentNode.removeChild(chartElement);
@@ -294,58 +281,21 @@ openModal = (countryData, slug) => {
             document.querySelector(
                 "#chart"
             ).innerHTML += `<canvas id="country-chart" width="300" height="300"></canvas>`;
-            // console.log(window.innerHeight);
-            // console.log(window.innerWidth);
             if (window.innerHeight < window.innerWidth) {
-                // console.log("boop");
                 document
                     .querySelector("#country-chart")
                     .setAttribute("height", 150);
-                // document.querySelector("#chart").setAttribute("height", 300);
             }
-            // document.querySelector("#chart").style.display = "block";
 
             let chartData;
             chartData = processCountryData(res.data);
 
-            // console.log(chartData);
-
             let ctx = document.getElementById("country-chart");
-            let chart = new Chart(ctx, {
-                type: "line",
-                data: {
-                    // labels: [1500, "", "", "", 1800, "", "", "", "", 2050],
-                    labels: chartData.dataLabels,
-                    datasets: [
-                        {
-                            data: chartData.dataPoints,
-                            label: "Infected",
-                            borderColor: "#ff9800",
-                            fill: false,
-                        },
-                    ],
-                },
-                options: {
-                    title: {
-                        display: true,
-                        text: `COVID-19 contamination over time in ${countryData.Country}`,
-                        position: "bottom",
-                    },
-                    scales: {
-                        yAxes: [
-                            {
-                                ticks: {
-                                    beginAtZero: true,
-                                    userCallback: function (value) {
-                                        value = addCommas({ data: value });
-                                        return value.data;
-                                    },
-                                },
-                            },
-                        ],
-                    },
-                },
-            });
+            let chart = createChartAndShowInfected(
+                ctx,
+                chartData,
+                countryData.Country
+            );
 
             axios
                 .get(
@@ -353,15 +303,7 @@ openModal = (countryData, slug) => {
                 )
                 .then((res) => {
                     chartData = processCountryData(res.data);
-                    // console.log(chart.data.datasets);
-                    let newLine = {
-                        data: chartData.dataPoints,
-                        label: "Deaths",
-                        borderColor: "#e51c23",
-                        fill: false,
-                    };
-                    chart.data.datasets.push(newLine);
-                    chart.update();
+                    chart = updateChart(chart, chartData, "Deaths", "#e51c23");
 
                     axios
                         .get(
@@ -369,14 +311,12 @@ openModal = (countryData, slug) => {
                         )
                         .then((res) => {
                             chartData = processCountryData(res.data);
-                            let newerLine = {
-                                data: chartData.dataPoints,
-                                label: "Recovered",
-                                borderColor: "#4caf50",
-                                fill: false,
-                            };
-                            chart.data.datasets.push(newerLine);
-                            chart.update();
+                            chart = updateChart(
+                                chart,
+                                chartData,
+                                "Recovered",
+                                "#4caf50"
+                            );
                         })
                         .catch((err_3) => console.log(err_3));
                 })
@@ -403,4 +343,56 @@ processCountryData = (countryData) => {
         dataPoints: processedData,
         dataLabels: dataLabels,
     };
+};
+
+createChartAndShowInfected = (ctx, chartData, countryName) => {
+    let chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: chartData.dataLabels,
+            datasets: [
+                {
+                    data: chartData.dataPoints,
+                    label: "Infected",
+                    borderColor: "#ff9800",
+                    fill: false,
+                },
+            ],
+        },
+        options: {
+            title: {
+                display: true,
+                text: `COVID-19 contamination over time in ${countryName}`,
+                position: "bottom",
+            },
+            scales: {
+                yAxes: [
+                    {
+                        ticks: {
+                            beginAtZero: true,
+                            userCallback: function (value) {
+                                value = addCommas({ data: value });
+                                return value.data;
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+    });
+
+    return chart;
+};
+
+updateChart = (chart, chartData, labelName, labelColor) => {
+    let newLine = {
+        data: chartData.dataPoints,
+        label: labelName,
+        borderColor: labelColor,
+        fill: false,
+    };
+    chart.data.datasets.push(newLine);
+    chart.update();
+
+    return chart;
 };
