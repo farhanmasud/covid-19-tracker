@@ -26,6 +26,8 @@ const DOMElements = {
     modalCountryChartDiv: "#chart",
     modalCountryChartDailyId: "country-chart-daily",
     modalCountryChartDailyDiv: "#chart-daily",
+    modalCountryChartDailyDeathId: "country-chart-daily-death",
+    modalCountryChartDailyDeathDiv: "#chart-daily-death",
 };
 
 document.querySelector(DOMElements.searchAndSummary).style.display = "none";
@@ -79,23 +81,24 @@ sortCompareFunc = (a, b) => {
 };
 
 addCommas = (data, keys = []) => {
-    var allKeys = Object.keys(data);
+    let pos;
+    let allKeys = Object.keys(data);
     if (keys.length === 0) {
         keys = allKeys;
     }
-    var retData = [];
+    let retData = [];
     allKeys.forEach((key) => {
         if (keys.includes(key)) {
-            var tempNum = data[key].toString().trim();
-            var keyLen = tempNum.length;
+            let tempNum = data[key].toString().trim();
+            let keyLen = tempNum.length;
             if (keyLen > 3) {
                 numCommas = Math.ceil(keyLen / 3) - 1;
-                var commaPos = [];
-                var remainder = keyLen % 3;
-                var commaCount = 0;
+                let commaPos = [];
+                let remainder = keyLen % 3;
+                let commaCount = 0;
 
                 if (remainder !== 0) {
-                    var pos = remainder;
+                    pos = remainder;
                 } else {
                     pos = 3;
                 }
@@ -170,7 +173,7 @@ displaySummary = (summaryData) => {
 displayTopFive = (data) => {
     data = data.sort(sortCompareFunc).reverse().slice(0, 5);
     data.forEach((value, index) => {
-        var showVal = addCommas(value, ["TotalConfirmed"]);
+        let showVal = addCommas(value, ["TotalConfirmed"]);
         document.querySelector(
             `#most-${index + 1}`
         ).innerHTML = `${showVal.Country}<span class="badge orange white-text">${showVal.TotalConfirmed}</span>`;
@@ -203,7 +206,7 @@ displayCountryStats = (data, slugData) => {
     let countryList = document.querySelector(DOMElements.countryListTable);
 
     data.forEach((value, index) => {
-        var showVal = addCommas(value, [
+        let showVal = addCommas(value, [
             "TotalConfirmed",
             "TotalDeaths",
             "TotalRecovered",
@@ -325,7 +328,11 @@ openModal = (countryData, slug) => {
             let chartDaily = createChartAndShowDaily(
                 ctxDaily,
                 infectedChartData,
-                countryData.Country
+                countryData.Country,
+                "Daily New Cases",
+                `Daily New COVID-19 Cases in ${countryData.Country}`,
+                "#ff9800",
+                "#e51c23"
             );
 
             let chartElement = document.getElementById(
@@ -359,6 +366,41 @@ openModal = (countryData, slug) => {
                 .then((res) => {
                     chartData = processChartData(res.data, "", startingPoint);
                     chart = updateChart(chart, chartData, "Deaths", "#e51c23");
+
+                    deathChartData = processDailyInfectedChartData(chartData);
+
+                    chartDailyDeathElement = document.getElementById(
+                        DOMElements.modalCountryChartDailyDeathId
+                    );
+                    chartDailyDeathElement.parentNode.removeChild(
+                        chartDailyDeathElement
+                    );
+
+                    document.querySelector(
+                        DOMElements.modalCountryChartDailyDeathDiv
+                    ).innerHTML += `<canvas id="${DOMElements.modalCountryChartDailyDeathId}" width="300" height="300"></canvas>`;
+                    if (window.innerHeight < window.innerWidth) {
+                        document
+                            .getElementById(
+                                DOMElements.modalCountryChartDailyDeathId
+                            )
+                            .setAttribute("height", 150);
+                    }
+                    ctxDailyDeath = document
+                        .getElementById(
+                            DOMElements.modalCountryChartDailyDeathId
+                        )
+                        .getContext("2d");
+
+                    chartDailyDeath = createChartAndShowDaily(
+                        ctxDailyDeath,
+                        deathChartData,
+                        countryData.Country,
+                        "Daily Deaths",
+                        `Daily COVID-19 Deaths in ${countryData.Country}`,
+                        "#e51c23",
+                        "#8e0000"
+                    );
 
                     axios
                         .get(
@@ -469,7 +511,7 @@ createChartAndShowInfected = (ctx, chartData, countryName) => {
         options: {
             title: {
                 display: true,
-                text: `COVID-19 contamination over time in ${countryName}`,
+                text: `COVID-19 Contamination Over Time in ${countryName}`,
                 position: "bottom",
             },
             scales: {
@@ -491,7 +533,15 @@ createChartAndShowInfected = (ctx, chartData, countryName) => {
     return chart;
 };
 
-createChartAndShowDaily = (ctx, chartData, countryName) => {
+createChartAndShowDaily = (
+    ctx,
+    chartData,
+    countryName,
+    label = "Daily New Cases",
+    text = "Daily New COVID-19 cases in country",
+    bgColor = "#ff9800",
+    hoverBgColor = "#e51c23"
+) => {
     let chart = new Chart(ctx, {
         type: "bar",
         data: {
@@ -499,10 +549,10 @@ createChartAndShowDaily = (ctx, chartData, countryName) => {
             datasets: [
                 {
                     data: chartData.dataPoints,
-                    label: "Daily New Cases",
+                    label: label,
                     // borderColor: "#ff9800",
-                    backgroundColor: "#ff9800",
-                    hoverBackgroundColor: "#e51c23",
+                    backgroundColor: bgColor,
+                    hoverBackgroundColor: hoverBgColor,
                     fill: true,
                 },
             ],
@@ -510,7 +560,7 @@ createChartAndShowDaily = (ctx, chartData, countryName) => {
         options: {
             title: {
                 display: true,
-                text: `Daily new COVID-19 cases in ${countryName}`,
+                text: text,
                 position: "bottom",
             },
             scales: {
@@ -537,7 +587,7 @@ updateChart = (chart, chartData, labelName, labelColor) => {
         data: chartData.dataPoints,
         label: labelName,
         borderColor: labelColor,
-        fill: false,
+        fill: true,
     };
     chart.data.datasets.push(newLine);
     chart.update();

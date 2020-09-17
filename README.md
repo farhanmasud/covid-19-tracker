@@ -7,6 +7,9 @@ Live at - http://covid-19-tracker.surge.sh/
 Features - 
 * Summary of total infections/recovered/deaths worldwide
 * Country specific detailed information with charts
+  * Daily new infections
+  * Daily deaths
+  * Contamination over time
 
 Dependencies -
 
